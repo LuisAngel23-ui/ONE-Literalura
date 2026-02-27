@@ -5,6 +5,7 @@ public class Autor {
     private Integer fechaNacimiento;
     private Integer fechaMuerte;
 
+
     Autor(DatosAutor datos){
         this.nombre = datos.nombre();
         this.fechaNacimiento = datos.fechaNacimiento();
@@ -13,6 +14,10 @@ public class Autor {
 
     @Override
     public String toString() {
-        return nombre;
+        return "#-----------------------#" + "\n" +
+                "Nombre: " + nombre + "\n" +
+                "Fecha de nacimiento: " + fechaNacimiento + "\n" +
+                "Fecha de muerte: " +  fechaMuerte + "\n" +
+                "#----------------------#";
     }
 }
