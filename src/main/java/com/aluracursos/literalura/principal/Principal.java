@@ -10,20 +10,18 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.Scanner;
-import java.util.stream.Collectors;
+
 
 public class Principal {
 
-    private Scanner entradaTeclado = new Scanner(System.in);
+    private final Scanner entradaTeclado = new Scanner(System.in);
 
-    private ConvierteDatos conversor = new ConvierteDatos();
-    private ConsumoAPI consumoAPI = new ConsumoAPI();
+    private final ConvierteDatos conversor = new ConvierteDatos();
+    private final ConsumoAPI consumoAPI = new ConsumoAPI();
 
 
-    private final String URL_BASE = "https://gutendex.com/books/";
-
-    private LibroRepository libroRepository;
-    private AutorRepository autorRepositorio;
+    private final LibroRepository libroRepository;
+    private final AutorRepository autorRepositorio;
 
     public Principal(LibroRepository repository, AutorRepository autorRepository){
         this.libroRepository = repository;
@@ -32,35 +30,25 @@ public class Principal {
 
     // ################ Interfaz de usuario #######################
 
-    private final String mensajeBienvenida = """
-                    
-                    **********
-                    
-                    Literalura
-                    
-                    ***********
-           
+    public void Menu(){
+
+        final String mensajeBienvenida = """
+                    ************
+                     Literalura
+                    ************
                 """;
-    private final String menu = """
-                   
+        final String menu = """
                    ************************
                    1. Buscar libro por titulo.
-                   
                    2. Listar libros guardados.
-                   
                    3. Listar autores registrados.
-                   
                    4. Listar autores vivos en determinado año.
-                   
                    5. Listar libros por idioma.
-                   
                    0. Cerrar aplicación.
                     ***********************
                 """;
 
 
-    // ############### UI ###############
-    public void Menu(){
         var opcion = -1;
 
         System.out.println(mensajeBienvenida);
@@ -84,34 +72,41 @@ public class Principal {
                     break;
                 case 5:
                     enlistarLibrosPorIdioma();
+                    break;
                 case 0:
                     System.out.println("Cerrando aplicación");
                     break;
+                default:
+                    System.out.println("Opción no disponible.");
             }
         }
 
     }
 
-    private Idiomas opcionesIdiomasABuscar(){
+    private Idiomas opcionesIdiomasABuscar() {
+
         String mensaje = """
                 - es - Español
                 - en - Ingles
                 - fr - Francés
                 - pt - portugués
                 """;
-        System.out.println("Idiomas dispobles");
-        System.out.println(mensaje);
-        System.out.println("Ingrese el idioma a buscar.");
+        while(true) {
+            System.out.println("Idiomas dispobles.");
+            System.out.println(mensaje);
+            System.out.println("Escriba la abreviación del idioma correspondiente");
 
-        String idiomaNombre = entradaTeclado.nextLine();
-        Idiomas idioma = Idiomas.fromString(idiomaNombre);
+            String idiomaNombre = entradaTeclado.nextLine();
 
-        return idioma;
+            try {
+                return Idiomas.fromString(idiomaNombre);
+
+            } catch (IllegalArgumentException e) {
+                System.out.println(idiomaNombre + " no es válido.");
+            }
+        }
     }
-
     // ############## Opciones de menu ###############
-
-
 
     private void buscarLibroWeb(){
 
@@ -119,27 +114,30 @@ public class Principal {
         var nombreLibro = entradaTeclado.nextLine();
 
         DatosLibro datos = getDatosLibro(nombreLibro);
-        Libro libro = new Libro(datos);
-        System.out.println(libro);
-        System.out.println("¿Quieres guardar el libro? \n Presiona 1 para si \n Presiona cualquier otro numero para no");
-        Integer guardar = entradaTeclado.nextInt();
-        entradaTeclado.nextLine();
 
-        if (guardar == 1){
-            // Verificacion de autor en base de datos
-            Autor autorAPI = libro.getAutor();
-            Optional<Autor> autorBuscado = autorRepositorio.findByNombreIgnoreCase(autorAPI.getNombre());
-            if (autorBuscado.isPresent()){
-                libro.setAutor(autorBuscado.get());
-            }else{
-                autorRepositorio.save(autorAPI);
+
+        if (datos != null) {
+            Libro libro = new Libro(datos);
+            System.out.println(libro);
+            System.out.println("¿Quieres guardar el libro? \nPresiona 1 para si \nPresiona cualquier otro numero para no");
+            int guardar = entradaTeclado.nextInt();
+            entradaTeclado.nextLine();
+
+            if (guardar == 1) {
+                // Verificacion de autor en base de datos
+                Autor autorAPI = libro.getAutor();
+                Optional<Autor> autorBuscado = autorRepositorio.findByNombreIgnoreCase(autorAPI.getNombre());
+                if (autorBuscado.isPresent()) {
+                    libro.setAutor(autorBuscado.get());
+                } else {
+                    autorRepositorio.save(autorAPI);
+                }
+
+
+                libroRepository.save(libro);
+                System.out.println("Libro guardado en base de datos.");
             }
-
-
-            libroRepository.save(libro);
-            System.out.println("Libro guardado en base de datos.");
         }
-
 
     }
 
@@ -168,23 +166,32 @@ public class Principal {
 
     private void enlistarLibrosPorIdioma() {
         Idiomas idioma = opcionesIdiomasABuscar();
-        System.out.println(idioma.toString());
+        System.out.println(idioma);
         List<Libro> librosBuscados = libroRepository.findByIdioma(idioma);
-        librosBuscados.stream()
-                .forEach(System.out::println);
+        if (librosBuscados.isEmpty()){
+            System.out.println("No hay libros en este idioma guardados en el registro.");
+        }else {
+            librosBuscados.forEach(System.out::println);
+        }
     }
 
     // ############### Funciones internas ###############
 
     private DatosLibro getDatosLibro(String nombreLibro) {
+        final String URL_BASE = "https://gutendex.com/books/";
         // Busqueda en API
         var json = consumoAPI.obtenerDatos(URL_BASE + "?search=" + nombreLibro.replace(" ","%20").toLowerCase());
 
         // Transformación json a clase
         ApiResponse datosAPI = conversor.obtenerDatos(json, ApiResponse.class);
-        DatosLibro datosLibro = datosAPI.respuesta().get(0);
 
-        return datosLibro;
+        // Verificación de respuesta
+        if (datosAPI != null && datosAPI.respuesta() != null && !datosAPI.respuesta().isEmpty()) {
+            return datosAPI.respuesta().getFirst();
+        } else {
+            System.out.println("No se encontró ningún libro con ese título.");
+            return null;
+        }
     }
 
     private void imprimirAutores(List<Autor> autores){
@@ -198,7 +205,7 @@ public class Principal {
 
                     List<String> titulosLibros = autor.getLibros().stream()
                             .map(Libro::getTitulo)
-                            .collect(Collectors.toList());
+                            .toList();
 
                     System.out.println("Libros: " + titulosLibros);
                     System.out.println("-----------------\n");

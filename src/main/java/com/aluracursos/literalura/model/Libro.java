@@ -2,9 +2,6 @@ package com.aluracursos.literalura.model;
 
 import jakarta.persistence.*;
 
-import java.util.List;
-import java.util.stream.Collectors;
-
 @Entity
 @Table(name = "libros")
 
@@ -28,15 +25,14 @@ public class Libro {
     private Integer noDescargas;
 
 
-    public Libro(){};
+    public Libro(){}
 
     public Libro(DatosLibro datosLibro){
         this.titulo = datosLibro.titulo();
-        this.sinopsis = datosLibro.resumen().get(0);
-        this.idioma = Idiomas.fromString(datosLibro.idioma().get(0));
+        this.sinopsis = datosLibro.resumen().getFirst();
+        this.idioma = Idiomas.fromString(datosLibro.idioma().getFirst());
         this.noDescargas = datosLibro.descargas();
-
-        this.autor = new Autor(datosLibro.autores().get(0));
+        this.autor = new Autor(datosLibro.autores().getFirst());
     }
 
     @Override
@@ -53,28 +49,8 @@ public class Libro {
     // Getters and Setters
 
 
-    public Long getId() {
-        return Id;
-    }
-
-    public void setId(Long id) {
-        Id = id;
-    }
-
     public String getTitulo() {
         return titulo;
-    }
-
-    public void setTitulo(String titulo) {
-        this.titulo = titulo;
-    }
-
-    public String getSipnosis() {
-        return sinopsis;
-    }
-
-    public void setSipnosis(String sipnosis) {
-        this.sinopsis = sipnosis;
     }
 
     public Autor getAutor() {
@@ -85,19 +61,8 @@ public class Libro {
         this.autor = autor;
     }
 
-    public Integer getNoDescargas() {
-        return noDescargas;
-    }
-
-    public void setNoDescargas(Integer noDescargas) {
-        this.noDescargas = noDescargas;
-    }
-
     public Idiomas getIdioma() {
         return idioma;
     }
 
-    public void setIdioma(Idiomas idioma) {
-        this.idioma = idioma;
-    }
 }
