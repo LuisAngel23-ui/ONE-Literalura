@@ -20,16 +20,19 @@ public class Libro {
     @Enumerated(EnumType.STRING)
     private Idiomas idioma;
 
-    private String sipnosis;
+    @Column(columnDefinition = "TEXT")
+    private String sinopsis;
 
-    @Transient
+    @ManyToOne
     private Autor autor;
     private Integer noDescargas;
 
 
+    public Libro(){};
+
     public Libro(DatosLibro datosLibro){
         this.titulo = datosLibro.titulo();
-        this.sipnosis = datosLibro.resumen().get(0);
+        this.sinopsis = datosLibro.resumen().get(0);
         this.idioma = Idiomas.fromString(datosLibro.idioma().get(0));
         this.noDescargas = datosLibro.descargas();
 
@@ -38,13 +41,13 @@ public class Libro {
 
     @Override
     public String toString() {
-        return  "##############################" + "\n" +
+        return  "------------- LIBRO -----------" + "\n" +
                 "Titulo: " + titulo + "\n" +
-                "Autor: " + autor + "\n" +
-                "Sipnosis: " + sipnosis + "\n" +
+                "Autor: " + autor.getNombre() + "\n" +
+                "Sipnosis: " + sinopsis + "\n" +
                 "Idioma: " + idioma + '\n' +
                 "Total de descargas: " + noDescargas + "\n"+
-                "###############################";
+                "--------------------------\n";
     }
 
     // Getters and Setters
@@ -67,11 +70,11 @@ public class Libro {
     }
 
     public String getSipnosis() {
-        return sipnosis;
+        return sinopsis;
     }
 
     public void setSipnosis(String sipnosis) {
-        this.sipnosis = sipnosis;
+        this.sinopsis = sipnosis;
     }
 
     public Autor getAutor() {

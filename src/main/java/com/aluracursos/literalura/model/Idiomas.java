@@ -90,7 +90,7 @@ public enum Idiomas {
                 return idioma;
             }
         }
-        throw new IllegalArgumentException("Ninguna categoria encontrada: " + text);
+        throw new IllegalArgumentException("No se encontro el dioma: " + text);
     }
 
     @Override
